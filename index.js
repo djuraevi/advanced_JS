@@ -2,19 +2,16 @@
 const BASE = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
 const GOODS = '/catalogData.json';
 
-function service (url, res) {
+function service (url) {
   return new Promise((resolve) => {
       const xhr = new XMLHttpRequest();
       xhr.open('GET', url);
-
       const loadHandler = () => {
         resolve(JSON.parse(xhr.response))
       }
-
       xhr.onload = loadHandler;
       xhr.send(); 
-
-  }).then(res)
+  })
 }
 
 
@@ -39,11 +36,9 @@ class GoodsList {
     this.goods = [];
   }
 
-  fetchGoods(callback) {
-    
-    service(`${BASE}${GOODS}`, (data) => {
+  fetchGoods() {
+    return service(`${BASE}${GOODS}`).then((data) => {
       this.goods = data;
-      callback();
     })
   }
 
@@ -64,7 +59,7 @@ class GoodsList {
 
 
 const goodsList = new GoodsList();
-goodsList.fetchGoods(() => {
+goodsList.fetchGoods().then(() => {
   goodsList.render();
 });
 goodsList.sumProducts();
