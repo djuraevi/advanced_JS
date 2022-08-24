@@ -2,8 +2,44 @@
 const BASE = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
 const GOODS = '/catalogData.json';
 
-const service = (url) => fetch(url)
-  .then((res) => res.json());
+// const service = (url) => fetch(url)
+//   .then((res) => res.json());
+
+function service(url) {
+  return new Promise((resolve) => {
+    fetch(url)
+    .then((res) => {
+      setTimeout(() => {
+        resolve(res.json())
+      }, 2000)
+    })
+  })
+}
+
+const app = new Vue ({
+  el: '#app',
+  data: {
+    isVisibleCart: false,
+    searchLine: '',
+    items: []
+  },
+
+  methods: {
+    showBasketCard() {
+      this.isVisibleCart = !this.isVisibleCart;
+    }
+  },
+
+  mounted() {
+    service(`${BASE}${GOODS}`).then((data) => {
+      this.items = data;
+  });
+  }
+})
+
+ 
+
+
 
 // function service (url) {
 //   return new Promise((resolve) => {
@@ -17,31 +53,30 @@ const service = (url) => fetch(url)
 //   })
 // }
 
+// class GoodsItem {
+//   constructor({product_name, price}) {
+//     this.title = product_name;
+//     this.price = price;
+//   }
 
-class GoodsItem {
-  constructor({product_name, price}) {
-    this.title = product_name;
-    this.price = price;
-  }
-
-  render() {
-    return `
-    <div class="goods-item">
-      <h3 class="title">${this.title}</h3>
-      <p class="price">${this.price}</p>
-    </div>
-  `;
-  }
-}
+//   render() {
+//     return `
+//     <div class="goods-item">
+//       <h3 class="title">${this.title}</h3>
+//       <p class="price">${this.price}</p>
+//     </div>
+//   `;
+//   }
+// }
 
 class GoodsList {
   constructor() {
-    this.goods = [];
+    this.items = [];
   }
 
   fetchGoods() {
     return service(`${BASE}${GOODS}`).then((data) => {
-      this.goods = data;
+      this.items = data;
     })
   }
 
@@ -61,11 +96,12 @@ class GoodsList {
 }
 
 
-const goodsList = new GoodsList();
-goodsList.fetchGoods().then(() => {
-  goodsList.render();
-});
-goodsList.sumProducts();
+// const goodsList = new GoodsList();
+// goodsList.fetchGoods().then(() => {
+//   goodsList.render();
+// });
+// goodsList.sumProducts();
+
 
 
 // 1) Какие виды областей видимости вы знаете? Написать ответ ниже
@@ -77,34 +113,34 @@ goodsList.sumProducts();
 
 
 // 2) Исправьте код так чтобы в консоль выводились числа от 0 до 10
-for (let i = 0; i <= 10; i++) {
-   setTimeout(() => {
-      console.log(i);
-   }, 0)
-}
+// for (let i = 0; i <= 10; i++) {
+//    setTimeout(() => {
+//       console.log(i);
+//    }, 0)
+// }
 
 
 // 3) Исправьте код так чтобы в консоль выводилось "John"
-var firstName = "Elena"
-const obj = {
-   firstName: 'John',
-   sayFirstName: function f(){
-      console.log(this.firstName)
-   }
-}
-obj.sayFirstName();
+// var firstName = "Elena"
+// const obj = {
+//    firstName: 'John',
+//    sayFirstName: function f(){
+//       console.log(this.firstName)
+//    }
+// }
+// obj.sayFirstName();
 
 
 // 4) Исправьте код так чтобы в консоль не выводилась ошибка (нельзя исправлять тело функции getArrowFunction)
- const user = {
-   age: 20
-}
-function getArrowFunction() {
-   "use strict"
-   return () => {
-      console.log(this.age)
-   }
-}
+//  const user = {
+//    age: 20
+// }
+// function getArrowFunction() {
+//    "use strict"
+//    return () => {
+//       console.log(this.age)
+//    }
+// }
 
-const arrowFunction = getArrowFunction.call(user);
-arrowFunction();
+// const arrowFunction = getArrowFunction.call(user);
+// arrowFunction();
