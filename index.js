@@ -2,40 +2,118 @@
 const BASE = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
 const GOODS = '/catalogData.json';
 
-// const service = (url) => fetch(url)
-//   .then((res) => res.json());
+const service = (url) => fetch(url)
+  .then((res) => res.json());
 
-function service(url) {
-  return new Promise((resolve) => {
-    fetch(url)
-    .then((res) => {
-      setTimeout(() => {
-        resolve(res.json())
-      }, 2000)
-    })
+// function service(url) {
+//   return new Promise((resolve) => {
+//     fetch(url)
+//     .then((res) => {
+//       setTimeout(() => {
+//         resolve(res.json())
+//       }, 2000)
+//     })
+//   })
+// }
+
+function init() {
+
+  Vue.component('custom-input', {
+    props: [
+      'search'
+    ],
+    template:`
+    <input 
+      type="text" 
+      class="goods-search"
+      @input="$emit('input', $event.target.value)"
+    /> 
+    `
+  })
+
+  Vue.component('custom-button', {
+    template:`
+    <button class="search-button button" type="button">
+      <slot></slot>
+    </button>
+    `
+  })
+
+  Vue.component('custom-button-open', {
+    template:`
+    <button 
+      class="cart-button button" 
+      type="button" 
+      @click="$emit('click_open')"
+      >
+        Корзина
+      </button>
+    `
+  })
+
+  Vue.component('goods-item', {
+    props: [
+      'item'
+    ],
+    template:`
+      <div class="goods-item">
+        <h3 class="title">{{item.product_name}}</h3>
+        <p class="price">{{item.price}}</p>
+      </div> 
+    `
+  })
+
+  Vue.component('basket-card', {
+    template:`
+      <div class="modal">
+        <div class="basket-card">
+            <div class="basket-card__header">
+              <h1 class="basket-card__header_title">Корзина</h1>
+              <div class="basket-card__btn-close" @click="$emit('click_close')">
+                <img src="img/cross.svg" alt="close">
+              </div>
+            </div>
+          <div class="basket-card__items">
+            контент
+          </div>
+        </div>
+      </div>
+    `
+  })
+
+  const app = new Vue ({
+    el: '#app',
+    data: {
+      isVisibleCart: false,
+      search: '',
+      items: []
+    },
+  
+    methods: {
+      showBasketCard() {
+        this.isVisibleCart = !this.isVisibleCart;
+      }
+    },
+    
+    computed: {
+      filteredItems() {
+        return this.items.filter(({product_name}) => {
+          const regExp = new RegExp(this.search, 'i');
+          return regExp.test(product_name);
+        })
+      }
+    },
+  
+    mounted() {
+      service(`${BASE}${GOODS}`).then((data) => {
+        this.items = data;
+    });
+    }
   })
 }
 
-const app = new Vue ({
-  el: '#app',
-  data: {
-    isVisibleCart: false,
-    searchLine: '',
-    items: []
-  },
+window.onload = init;
 
-  methods: {
-    showBasketCard() {
-      this.isVisibleCart = !this.isVisibleCart;
-    }
-  },
-
-  mounted() {
-    service(`${BASE}${GOODS}`).then((data) => {
-      this.items = data;
-  });
-  }
-})
 
  
 
