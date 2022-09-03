@@ -1,224 +1,160 @@
+const BASE_URL = 'http://localhost:8000';
+const GET_GOODS_ITEMS = `${BASE_URL}/goods.json`;
+const GET_BASKET_GOODS = `${BASE_URL}/basket_goods`;
 
-const BASE = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
-const GOODS = '/catalogData.json';
-
-const service = (url) => fetch(url)
-  .then((res) => res.json());
-
-// function service(url) {
-//   return new Promise((resolve) => {
-//     fetch(url)
-//     .then((res) => {
-//       setTimeout(() => {
-//         resolve(res.json())
-//       }, 2000)
-//     })
-//   })
-// }
+function service(url, method="GET", body) {
+  return fetch(url, {
+    headers: Object.assign({}, body ? {
+      'Content-Type': 'application/json; charset=utf-8'
+    } : {}),
+    method,
+    body: JSON.stringify(body)
+  })
+  .then((res) => res.json())
+}
 
 function init() {
-
-  Vue.component('custom-input', {
-    props: [
-      'search'
-    ],
-    template:`
-    <input 
-      type="text" 
-      class="goods-search"
-      @input="$emit('input', $event.target.value)"
-    /> 
+  
+  Vue.component('search-component', {
+    model: {
+      prop: 'value',
+      event: 'input'
+    },
+    props: {
+      value: String
+    },
+    template: `
+      <input type="text" class="goods-search" :value="value" @input="$emit('input', $event.target.value)" />
     `
   })
-
-  Vue.component('custom-button', {
-    template:`
-    <button class="search-button button" type="button">
-      <slot></slot>
-    </button>
-    `
-  })
-
-  Vue.component('custom-button-open', {
-    template:`
-    <button 
-      class="cart-button button" 
-      type="button" 
-      @click="$emit('click_open')"
-      >
-        Корзина
+  
+  
+  const CustomButton = Vue.component('custom-button', {
+    template: `
+      <button class="button" type="button" v-on:click="$emit('click')">
+         <slot></slot>
       </button>
     `
   })
 
-  Vue.component('goods-item', {
-    props: [
-      'item'
-    ],
-    template:`
-      <div class="goods-item">
-        <h3 class="title">{{item.product_name}}</h3>
-        <p class="price">{{item.price}}</p>
-      </div> 
-    `
-  })
-
-  Vue.component('basket-card', {
-    template:`
-      <div class="modal">
-        <div class="basket-card">
-            <div class="basket-card__header">
-              <h1 class="basket-card__header_title">Корзина</h1>
-              <div class="basket-card__btn-close" @click="$emit('click_close')">
-                <img src="img/cross.svg" alt="close">
-              </div>
-            </div>
-          <div class="basket-card__items">
-            контент
-          </div>
-        </div>
-      </div>
-    `
-  })
-
-  const app = new Vue ({
-    el: '#app',
-    data: {
-      isVisibleCart: false,
-      search: '',
-      items: []
-    },
   
-    methods: {
-      showBasketCard() {
-        this.isVisibleCart = !this.isVisibleCart;
+  const basketGoods = Vue.component('basket-goods', {
+    data() {
+      return {
+         basketGoodsItems: []
       }
     },
     
-    computed: {
-      filteredItems() {
-        return this.items.filter(({product_name}) => {
-          const regExp = new RegExp(this.search, 'i');
-          return regExp.test(product_name);
+    template: `
+      <div class="modal">
+         <div class="basket-card">
+            <div class="basket-card__header">
+               <h1>basket card</h1>
+               <div class="basket-card__header__delete-icon"
+                  v-on:click="$emit('closeclick')"
+               ></div>
+            </div>
+            <div class="basket-card__items">
+               <basket-goods-item v-for="item in basketGoodsItems" :item="item" @delete="deleteBasketGood" @add="addGood"></basket-goods-item>
+            </div>
+         </div>
+      </div>
+    `,
+    mounted() {
+      service(GET_BASKET_GOODS).then((data) => {
+        this.basketGoodsItems = data
+      })
+    },
+    methods: {
+      deleteBasketGood(id) {
+        service(GET_BASKET_GOODS, "DELETE", {
+          id
+        }).then((data) => {
+          this.basketGoodsItems = data
+        })
+      },
+      addGood(id) {
+        service(GET_BASKET_GOODS, 'PUT', {
+          id
+        }).then((data) => {
+          this.basketGoodsItems = data
         })
       }
-    },
+    }
+  })
   
+  Vue.component('basket-goods-item', {
+    props: [
+      'item'
+    ],
+    template: `
+      <div class="basket-card__content___item">
+         <h3>{{item?.data?.product_name}}</h3>
+         <div>count: {{item?.count}}</div>
+         <div>total: {{item?.total}}</div>
+         <div>
+         <custom-button @click="$emit('add', item.data.id)">+</custom-button>
+         <custom-button @click="$emit('delete', item.data.id)">-</custom-button>
+         </div>
+      </div>
+    `
+  })
+  
+  const goodsItem = Vue.component('goods-item', {
+    props: [
+       'item'
+    ],
+    template: `
+      <div class="goods-item">
+         <h3>{{ item.product_name }}</h3>
+         <p>{{ item.price }}</p>
+         <custom-button @click="addGood">добавить</custom-button>
+      </div>
+    `,
+    methods: {
+      addGood() {
+        service(GET_BASKET_GOODS, 'PUT', {
+          id: this.item.id
+        })
+      }
+    }
+  })
+  
+  const app = new Vue({
+    el: '#root',
+    data: {
+      items: [],
+      search: '',
+      cardIsVision: false
+    },
+    methods: {
+      setVisionCard() {
+        this.cardIsVision = !this.cardIsVision
+      },
+      fetchGoods() {
+        service(GET_GOODS_ITEMS).then((data) => {
+          this.items = data;
+        });
+      },
+      onSearchComponentChange(value) {
+        this.search = value
+      }
+    },
+    computed: {
+      filteredItems() {
+        return this.items.filter(({ product_name }) => {
+          return product_name.match(new RegExp(this.search, 'gui'))
+        })
+      },
+      calculatePrice() {
+        return this.items.reduce((prev, { price }) => {
+          return prev + price;
+        }, 0)
+      }
+    },
     mounted() {
-      service(`${BASE}${GOODS}`).then((data) => {
-        this.items = data;
-    });
+      this.fetchGoods();
     }
   })
 }
-
-window.onload = init;
-
-
- 
-
-
-
-// function service (url) {
-//   return new Promise((resolve) => {
-//       const xhr = new XMLHttpRequest();
-//       xhr.open('GET', url);
-//       const loadHandler = () => {
-//         resolve(JSON.parse(xhr.response))
-//       }
-//       xhr.onload = loadHandler;
-//       xhr.send();
-//   })
-// }
-
-// class GoodsItem {
-//   constructor({product_name, price}) {
-//     this.title = product_name;
-//     this.price = price;
-//   }
-
-//   render() {
-//     return `
-//     <div class="goods-item">
-//       <h3 class="title">${this.title}</h3>
-//       <p class="price">${this.price}</p>
-//     </div>
-//   `;
-//   }
-// }
-
-class GoodsList {
-  constructor() {
-    this.items = [];
-  }
-
-  fetchGoods() {
-    return service(`${BASE}${GOODS}`).then((data) => {
-      this.items = data;
-    })
-  }
-
-  render () {
-    let goodsList = this.goods.map((item) => {
-      const goodsItem = new GoodsItem(item);
-      return goodsItem.render();
-    });
-    document.querySelector('.goods-list').innerHTML = goodsList.join('');
-  }
-
-  sumProducts(){
-    return this.goods.reduce((prev, {price})=> {
-      return prev + price;
-    },0)
-  }
-}
-
-
-// const goodsList = new GoodsList();
-// goodsList.fetchGoods().then(() => {
-//   goodsList.render();
-// });
-// goodsList.sumProducts();
-
-
-
-// 1) Какие виды областей видимости вы знаете? Написать ответ ниже
-
-// глобальная - обьявление переменных вне функций и модулей, доступ к откуда угодно внутри файла
-// локальная - переменные используемые в теле функции, и доступные только внутри нее
-// внутри блока - локальная переменная для функции, скрыта внутри видимости блока и доступна внутри этого блока
-// замыкание - это способность функции запоминать область видимости и обращаться к ней из любого места приложения
-
-
-// 2) Исправьте код так чтобы в консоль выводились числа от 0 до 10
-// for (let i = 0; i <= 10; i++) {
-//    setTimeout(() => {
-//       console.log(i);
-//    }, 0)
-// }
-
-
-// 3) Исправьте код так чтобы в консоль выводилось "John"
-// var firstName = "Elena"
-// const obj = {
-//    firstName: 'John',
-//    sayFirstName: function f(){
-//       console.log(this.firstName)
-//    }
-// }
-// obj.sayFirstName();
-
-
-// 4) Исправьте код так чтобы в консоль не выводилась ошибка (нельзя исправлять тело функции getArrowFunction)
-//  const user = {
-//    age: 20
-// }
-// function getArrowFunction() {
-//    "use strict"
-//    return () => {
-//       console.log(this.age)
-//    }
-// }
-
-// const arrowFunction = getArrowFunction.call(user);
-// arrowFunction();
+window.onload = init

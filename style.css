@@ -168,4 +168,24 @@ body {
   display: flex;
   justify-content: center;
   padding-top: 100px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 50px;
+}
+
+.basket-card__content___item{
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 25px;
+  border-radius: 50px;
+  box-shadow: 10px 10px 21px #d3d3d6, -10px -10px 21px #fff;
+}
+
+.basket-card__header__delete-icon {
+  background-image: url("img/delete_icon.png");
+  background-size: contain;
+  width: 30px;
+  height: 30px;
+  margin: 10px;
 }
