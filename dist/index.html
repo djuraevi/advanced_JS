@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <title>eShop</title>
+<script defer src="index.js"></script></head>
+<body>
+    <div id="root">
+        <header class="header">
+           <div class="search">
+              <search-component v-model="search"></search-component>
+              <custom-button>Искать</custom-button>
+           </div>
+           <div class="actions">
+              <custom-button v-on:click="setVisionCard">Корзина</custom-button>
+           </div>
+        </header>
+        <main class="container">
+           <div class="goods-list">
+              <goods-item v-for="item in filteredItems" v-bind:item="item" ></goods-item>
+           </div>
+        </main>
+        <basket-goods v-if="cardIsVision" v-on:closeclick="setVisionCard"></basket-goods>
+  
+     </div>
+</body>
+</html>
